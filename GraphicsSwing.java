@@ -1,7 +1,7 @@
 /*
  * Computer Graphics: Assignment1
  * Author : 66050033 Kittikun Jaroomkluea
- * Author : 6605
+ * Author : 66050243 Nisa Chuensuwan 
  * 
  * Note : 
  *      - To jump between each section of code
@@ -87,7 +87,7 @@ public class GraphicsSwing
     public void paintComponent(Graphics g){
         Graphics2D g2d = (Graphics2D) g;
         g2d.setColor(Color.WHITE);
-        g2d.fillRect(0, 0, 600, 600);
+        plot(g2d, 0, 0, 600);
         g2d.setColor(Color.BLACK);
 
 
@@ -96,28 +96,153 @@ public class GraphicsSwing
         ));
         drawBall(g2d);
     }
+    /* public method for testing with other class */
     public void testTransformation(Graphics2D g){
         AffineTransform old = g.getTransform();
         Point2D origin = new Point2D.Double(300, 300);
         Point2D screenPos;
         AffineTransform transform;
         int f = circleMove.size();
+        double transmatrix[];
 
         for (int i=0; i<f; ++i){
-            transform = new AffineTransform(getFrameTransform(circleMove, i));
+            if ( 1 == 1) {
+            transmatrix = getFrameTransform(circleMove, i);
+            transform = new AffineTransform(transmatrix);
+            System.out.println(Arrays.toString(transmatrix));
             g.setTransform(transform);
             screenPos = transform.transform(origin, null);
             System.out.println(""+i+" painted at (" + screenPos.getX()+", "+screenPos.getY()+")");
             drawBall(g);
+            }
         }
     }
+    public void testDraw(Graphics2D g){
+        // drawBaby(g);
+        drawBabyFace(g);
+    }
+
     /* BELOW THIS
      * Drawing Stuff
      */
     private void drawBall(Graphics2D g){
-        drawCircle(g, 300, 300, 30);
+        // drawCircle(g, 300, 300, 30);
+        g.drawOval(300, 300, 30,30);
     }
 
+    private void drawBaby(Graphics2D g){
+        // head
+        drawCircle(g, 200, 200, 50);
+        // three litte hair
+        drawLine(g, 192, 135, 194, 151);
+        drawLine(g, 200, 135, 200, 151);
+        drawLine(g, 206, 135, 204, 151);
+        // ear
+        drawCurve(g,
+            200, 210,
+            190, 220,
+            180, 175,
+            197, 190 
+        );
+        // eye
+        drawEllipse(g, 225, 190, 4, 6);
+        // eyebrown
+        drawLine(g, 227, 174, 215, 179);
+        // dummy
+        drawCurve(g,
+            250, 200,
+            265, 180,
+            264, 230,
+            249, 220
+        );
+        // body
+        // back spine
+        drawLine(g, 180, 243, 160, 285);
+        drawLine(g, 160, 285, 160, 310);
+        // butt
+        drawLine(g, 160, 310, 155, 330);
+        drawLine(g, 155, 330, 155, 335);
+        drawLine(g, 155, 335, 160, 360);
+        drawLine(g, 160, 360, 190, 362);
+        drawLine(g, 190, 362, 215, 357);
+        drawCurve(g,
+            215, 357,
+            206, 340,
+            205, 315,
+            215, 312
+        );
+        drawCurve(g,
+            215, 312,
+            214, 309,
+            212, 308,
+            200, 310
+        );
+        drawLine(g, 160, 300, 209, 300);
+        // chest
+        drawLine(g, 205, 250, 210, 255);
+        drawLine(g, 211, 272, 205, 310);
+        // rigth arm
+        drawLine(g, 190, 265, 275, 215);
+        drawLine(g, 196, 283, 275, 227);
+        // hand
+        drawCurve(g,
+            275, 215,
+            278, 210,
+            280, 202,
+            290, 195
+        );
+        drawLine(g, 290, 195, 300, 197);
+        drawCurve(g,
+            300, 197,
+            302, 200,
+            305, 211,
+            280, 230
+        );
+        drawLine(g, 280, 230, 275, 227);
+        // Leg
+        drawCurve(g,
+            215, 312,
+            220, 315,
+            250, 320,
+            260, 335
+        );
+        drawLine(g, 260, 335, 260, 345);
+        drawCurve(g,
+            260, 345,
+            250, 355,
+            240, 360,
+            215, 357
+        );
+        // left arm
+        drawLine(g, 214, 270, 230, 318);
+        drawLine(g, 209, 300, 212, 310);  
+    }
+    private void drawBabyFace(Graphics2D g){
+        AffineTransform ot = g.getTransform();
+        // head shape
+        drawPolygon(g,
+  /* x axis */new int[]{70, 167, 286, 352, 381, 417, 419, 385, 294, 203, 111,  67,  67, 48},
+  /* y axis */new int[]{119, 67,  60, 110, 190, 235, 294, 350, 390, 402, 393, 340, 277, 195} 
+        );
+        g.setTransform(new AffineTransform(
+            multiplyTransform(makeRotationMatrix(20), makeTranslationMatrix(-45, 160))
+        ));
+        // dummy
+        drawCircle(g, 210, 320, 70);
+        // left(HS) eye
+        drawEllipse(g, 123, 170, 55, 62);
+        // right(HS) eye
+        drawEllipse(g, 296, 170, 55, 62);
+
+        // cheek
+        g.setTransform(ot);
+        drawLine(g, 107, 289, 102, 320);
+        drawLine(g, 133, 283, 128, 319);
+        drawLine(g, 162, 282, 156, 309);
+        drawLine(g, 312, 231, 312, 253);
+        drawLine(g, 334, 216, 330, 262);
+        drawLine(g, 361, 217, 359, 244);
+    }
 
     /* BELOW THIS
      * an implementation of Transformation matrix
@@ -182,6 +307,11 @@ public class GraphicsSwing
     
     /* BELOW THIS
      * an implementation of drawing algorithm
+     * including
+     *  - drawCurve() : Bezier Curve
+     *  - drawLine() : Bresenham Line
+     *  - drawCircle() : Midpoint Circle
+     *  - drawEllipse() : Midpoint Ellipse
      */
     // beier curve
     private void drawCurve(Graphics2D g,
@@ -267,9 +397,6 @@ public class GraphicsSwing
         }
     }
 
-    private void plot(Graphics2D g, int x, int y){
-        g.fillRect(x, y, 1, 1);
-    }
 
     // draw ellipse
     private void drawEllipse(Graphics2D g, int xc, int yc,
@@ -327,6 +454,20 @@ public class GraphicsSwing
         }
 
     }
+
+    private void drawPolygon(Graphics2D g, int xPoly[], int yPoly[]){
+        Polygon p = new Polygon(xPoly, yPoly, xPoly.length);
+        g.drawPolygon(p);
+    }
+
+    private void plot(Graphics2D g, int x, int y){
+        g.fillRect(x, y, 1, 1);
+    }
+
+    private void plot(Graphics2D g, int x, int y, int size){
+        g.fillRect(x, y, size, size);
+    }
+
     /* BELOW THIS
      *
      */
@@ -341,15 +482,15 @@ public class GraphicsSwing
         // frame 1
         circleMove.add(new ArrayList<>());
         circleMove.get(1).add(makeScaleMatrix(3, 1));
-        circleMove.get(1).add(makeTranslationMatrix(-200, 30));
+        circleMove.get(1).add(makeTranslationMatrix(-204.5, 30));
 
         circleMove.add(new ArrayList<>());
         circleMove.get(2).add(makeScaleMatrix(1.5, 2.5));
-        circleMove.get(2).add(makeTranslationMatrix(-100, -200));
+        circleMove.get(2).add(makeTranslationMatrix(-95, -200));
 
         circleMove.add(new ArrayList<>());
         circleMove.get(3).add(makeScaleMatrix(1.5, 2.5));
-        circleMove.get(3).add(makeTranslationMatrix(-100, -220));
+        circleMove.get(3).add(makeTranslationMatrix(-95, -220));
 
         circleMove.add(new ArrayList<>());
         circleMove.get(4).add(makeScaleMatrix(2, 2));
@@ -370,21 +511,14 @@ public class GraphicsSwing
         circleMove.add(new ArrayList<>());
         circleMove.get(8).add(makeScaleMatrix(2, 2));
         circleMove.get(8).add(makeTranslationMatrix(-150, -175));
+
+        circleMove.add(new ArrayList<>());
+        circleMove.get(9).add(makeScaleMatrix(0.25, 0.25));
+        //circleMove.get(9).add(makeTranslationMatrix(-300, -300));
+
     }
 
-    /* BELOW THIS
-     * Public method for testing
-     */
     
-    public ArrayList<ArrayList<double[]>> getTransformMatrix(){
-        return this.circleMove;
-    }
-    public double[] public_getFrameTransform(
-        ArrayList<ArrayList<double[]>> alist,
-        int frame){
-        return getFrameTransform(alist, frame);
-    }
-
     private double sin(double x) { return Math.sin(x); }
     private double cos(double x) { return Math.cos(x); }
 }
