@@ -24,8 +24,8 @@ public class Test extends JPanel
     @Override
     public void paintComponent(Graphics g1){
         Graphics2D g = (Graphics2D) g1;
-        // gSwing.testTransformation(g);
+        gSwing.testTransformation(g);
         // gSwing.testDraw(g);
-        gSwing.testColoring(g);
+        // gSwing.testColoring(g);
     }
 }

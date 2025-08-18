@@ -50,6 +50,7 @@ public class GraphicsSwing
     private ArrayList<ArrayList<double[]>> drawMamaHandMove;
     private ArrayList<ArrayList<double[]>> drawHiFiveMove;
     private ArrayList<ArrayList<double[]>> drawMamaFaceMove;
+    private ArrayList<ArrayList<double[]>> drawHandsMove;
 
     public static void main(String args[]){
         GraphicsSwing m = new GraphicsSwing();
@@ -70,6 +71,7 @@ public class GraphicsSwing
         createMamaHandMove();
         createHifiveMove();
         createMamaFaceMove();
+        createHandMove();
         createFrameColor();
     }
 
@@ -95,6 +97,7 @@ public class GraphicsSwing
             debug_frame_timer();
 
             if ( currentFrame > 66) currentFrame = 0;
+            // if ( currentFrame > 66) return;
             repaint();
 
         }
@@ -121,7 +124,7 @@ public class GraphicsSwing
 
     /* public method for testing with other class */
     public void testColoring(Graphics2D g2d){
-        currentFrame = 1;
+        currentFrame = 3;
         g2d.setColor(Color.WHITE);
         plot(g2d, 0, 0, 600);
         g2d.setColor(Color.BLACK);
@@ -138,34 +141,35 @@ public class GraphicsSwing
         Point2D screenPos;
         AffineTransform transform;
         /* Change Here */
-        int f = drawHiFiveMove.size();
+        int f = drawHandsMove.size();
         double transmatrix[];
 
         for (int i=0; i<f; ++i){
-            if ( i == 4 || i == 4) {
+            if ( i == 12 || i == 13) {
                 /* Change Here */
-                if ( drawHiFiveMove.get(i) == null ) continue;
+                if ( drawHandsMove.get(i) == null ) continue;
                 /* Change Here */
-                transmatrix = getFrameTransform(drawHiFiveMove, i);
+                transmatrix = getFrameTransform(drawHandsMove, i);
                 if (transmatrix == null) continue;
                 transform = new AffineTransform(transmatrix);
                 g.setTransform(transform);
                 screenPos = transform.transform(origin, null);
 
                 System.out.println(Arrays.toString(transmatrix));
-                System.out.println(""+i+" painted at (" + screenPos.getX()+", "+screenPos.getY()+")");
+                System.out.println(""+i+" -----painted at (" + screenPos.getX()+", "+screenPos.getY()+")");
                 /* Change Here */
-                drawHiFive(g);
+                drawhands(g);
             }
         }
+
         /* Change Here */
-        f = drawMamaFaceMove.size();
+        f = drawBabyMove.size();
         for (int i=0; i<f; ++i){
-            if ( i == 2 || i==2) {
+            if ( i == 13 ) {
                 /* Change Here */
-                if ( drawMamaFaceMove.get(i) == null ) continue;
+                if ( drawBabyMove.get(i) == null ) continue;
                 /* Change Here */
-                transmatrix = getFrameTransform(drawMamaFaceMove, i);
+                transmatrix = getFrameTransform(drawBabyMove, i);
                 if (transmatrix == null) continue;
                 transform = new AffineTransform(transmatrix);
                 g.setTransform(transform);
@@ -174,7 +178,7 @@ public class GraphicsSwing
                 System.out.println(Arrays.toString(transmatrix));
                 System.out.println(""+i+" painted at (" + screenPos.getX()+", "+screenPos.getY()+")");
                 /* Change Here */
-                drawMamaFace(g, 1);
+                drawBaby(g);
             }
         }
     }
@@ -188,10 +192,13 @@ public class GraphicsSwing
 
 
         // drawBaby(g_buf);
-        drawBabyFace(g_buf);
+        // drawBabyFace(g_buf);
         // drawMamaHand(g_buf);
         // drawHiFive(g_buf);
         // drawMamaFace(g_buf, 2);
+        drawhands(g_buf);
+        // drawManHead(g_buf);
+        // drawManBody(g_buf);
 
 
         g.drawImage(test_buffer, 0, 0, null);
@@ -263,7 +270,14 @@ public class GraphicsSwing
             drawMamaFace(g, (currentFrame > 53)?2:1);
             g.setTransform(old);
         }
-
+        if ( currentFrame < drawHandsMove.size() 
+            && drawHandsMove.get(currentFrame) != null){
+            g.setTransform(new AffineTransform(
+                getFrameTransform(drawHandsMove, currentFrame)
+            ));
+            drawhands(g);
+            g.setTransform(old);
+        }
 
         // drawBabyFace(g);
 
@@ -443,6 +457,10 @@ public class GraphicsSwing
         drawLine(g, 396, 308, 401, 327);
         drawLine(g, 408, 296, 414, 330);
         drawLine(g, 423, 296, 423, 312); 
+
+        drawLine(g, 247, 387, 200, 450);
+        drawLine(g, 199, 590, 200, 450);
+        drawLine(g, 284, 451, 288, 481);
     }
     
     private void drawMamaHand(Graphics2D g){
@@ -635,8 +653,94 @@ public class GraphicsSwing
             356, 380
         );
 
-    }
 
+        drawLine(g, 367, 433, 340, 464);
+        drawLine(g, 272, 468, 363, 464);
+        drawLine(g, 404, 426, 363, 464);
+
+        drawLine(g, 107, 332, 207, 328);
+
+        drawLine(g, 0, 392, 107, 332);
+        drawLine(g, 219, 352, 217, 412);
+        drawLine(g, 272, 468, 217, 412);
+        drawLine(g, 232, 380, 226, 424);
+
+    }
+    private void drawhands(Graphics2D g) {
+        drawPolygon(g,
+            new int[]{388, 404, 448, 483, 500, 534, 482, 434, 413, 407, 403},
+            new int[]{185, 172, 132, 95, 79, 110, 145, 180, 195, 202, 190} 
+        );
+        drawPolygon(g,
+            new int[]{555, 415, 416, 437, 573, 562},
+            new int[]{23, 163, 179, 181, 82, 54} 
+        );
+        drawPolygon(g,
+            new int[]{388, 385, 379, 375, 370, 365, 360, 355, 350, 346, 340, 339, 344, 348, 345, 338, 332, 325, 319, 312, 314, 323, 331, 337, 347, 342, 337, 326, 319, 319, 327, 330, 335, 338, 351, 351, 347, 343, 340, 333, 324, 324, 330, 334, 348, 359, 353, 346, 338, 333, 331, 339, 350, 366, 384, 400, 407},
+            new int[]{185, 186, 186, 186, 185, 185, 186, 188, 190, 194, 199, 207, 207, 205, 210, 215, 219, 225, 227, 238, 242, 234, 228, 225, 220, 225, 229, 237, 247, 251, 244, 242, 238, 237, 228, 230, 233, 236, 237, 240, 248, 253, 250, 244, 243, 233, 239, 244, 244, 246, 251, 250, 248, 240, 232, 207, 200}
+        );
+
+        drawPolygon(g,
+            new int[]{345, 345, 346, 347, 348, 350, 352, 354, 357},
+            new int[]{210, 213, 216, 219, 222, 225, 227, 230, 233}
+        );
+        drawPolygon(g,
+            new int[]{367, 368, 369, 370, 371, 373, 374, 375, 377},
+            new int[]{199, 198, 198, 197, 197, 195, 194, 193, 191}
+        );
+        drawPolygon(g,
+            new int[]{364, 365, 367, 368, 370, 371, 374, 376, 378, 380},
+            new int[]{230, 227, 225, 224, 222, 220, 219, 217, 216, 215}
+        );
+    }
+    
+    private void drawManHead(Graphics2D g){
+        int x_head[] = {191, 130, 120, 91, 72, 65, 92, 130, 157, 177, 206, 262, 276, 280, 291, 283, 287, 272, 281, 263, 232};
+        int y_head[] = {148, 171, 181, 207, 249, 283, 344, 372, 381, 394, 401, 407, 389, 338, 318, 292, 261, 224, 209, 187, 165};
+        drawPolygon(g, x_head, y_head);
+
+        drawLine(g, 260, 360, 251, 372);
+        drawLine(g, 280, 338, 274, 348);
+        drawLine(g, 249, 334, 258, 329);
+        drawLine(g, 249, 306, 258, 329);
+        drawLine(g, 208, 364, 190, 358);
+        drawLine(g, 180, 340, 190, 358);
+        drawLine(g, 147, 376, 145, 364);
+        drawLine(g, 135, 360, 120, 340); 
+        drawLine(g, 120, 340, 120, 316);
+        drawLine(g, 120, 316, 138, 315);
+        drawLine(g, 138, 315, 145, 298);
+        drawLine(g, 145, 298, 134, 292);
+        drawLine(g, 140, 280, 134, 292);
+        drawLine(g, 140, 280, 127, 270);
+        drawLine(g, 181, 227, 127, 270);
+        drawLine(g, 181, 227, 235, 213);
+        drawLine(g, 272, 224, 235, 213);
+
+        drawPolygon(g,
+            new int[]{220, 186, 201, 221},
+            new int[]{290, 306, 314, 306}
+        );
+        drawPolygon(g,
+            new int[]{253, 280, 274, 260},
+            new int[]{275, 271, 286, 290}
+        );
+
+        drawLine(g, 206, 295, 212, 309);
+        drawLine(g, 214, 292, 219, 307);
+        drawLine(g, 263, 274, 266, 288);
+        drawLine(g, 269, 273, 272, 287);
+
+    }
+    private void drawManBody(Graphics2D g){
+        int x_b[] = {117, 104, 189, 202, 190, 192, 216, 224, 258, 2, 8, 36, 109};
+        int y_b[] = {429, 460, 492, 469, 449, 443, 472, 499, 595, 591, 559, 473, 428};
+        drawPolygon(g, x_b, y_b);
+    
+        drawLine(g, 146, 375, 109, 438);
+        drawLine(g, 183, 467, 216, 400);
+
+    }
 
     /* BELOW THIS
      * an implementation of Transformation matrix
@@ -868,7 +972,7 @@ public class GraphicsSwing
      */
     private BufferedImage paintColor(BufferedImage buff){
         // set of all color at frame
-        if ( currentFrame > color.size() ){
+        if ( currentFrame >= color.size() ){
             return buff;
         }
         ArrayList<ColorSeed> cs = color.get(currentFrame);
@@ -986,6 +1090,11 @@ public class GraphicsSwing
 
         color.add(new ArrayList<>()); // frame 1
         color.get(frame+1).add(new ColorSeed(2, 2, new Color(150, 179, 242)));
+        color.get(frame+1).add(new ColorSeed(150, 30, new Color(230, 67, 105)));
+
+        color.add(new ArrayList<>()); // frame 1
+        color.get(frame+2).add(new ColorSeed(2, 2, new Color(150, 179, 242)));
+        color.get(frame+2).add(new ColorSeed(150, 30, new Color(230, 67, 105)));
     }
 
     /* Animation */
@@ -1156,6 +1265,7 @@ public class GraphicsSwing
 
         for (int i=0; i<begin; ++i) drawMamaHandMove.add(null);
 
+        // 19 - 22
         drawMamaHandMove.add(new ArrayList<>());
         drawMamaHandMove.add(new ArrayList<>());
         drawMamaHandMove.add(new ArrayList<>());
@@ -1378,6 +1488,82 @@ public class GraphicsSwing
         drawMamaFaceMove.get(begin+24).add(getFrameTransform(drawMamaFaceMove, begin+12));
     }
     
+    private void createHandMove(){
+        drawHandsMove = new ArrayList<>();
+        int begin = 0;
+
+        //
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin).add(makeScaleMatrix(4, 4));
+        drawHandsMove.get(begin).add(makeTranslationMatrix(-250, -150));
+        
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+1).add(getFrameTransform(drawHandsMove, begin));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+2).add(getFrameTransform(drawHandsMove, begin));
+
+        //
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+3).add(makeScaleMatrix(3.5, 3.5));
+        drawHandsMove.get(begin+3).add(makeTranslationMatrix(-240, -150));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+4).add(getFrameTransform(drawHandsMove, begin+3));
+
+        //
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+5).add(makeScaleMatrix(3, 3));
+        drawHandsMove.get(begin+5).add(makeTranslationMatrix(-230, -145));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+6).add(getFrameTransform(drawHandsMove, begin+5));
+
+        // 
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+7).add(makeScaleMatrix(2.5, 2.5));
+        drawHandsMove.get(begin+7).add(makeTranslationMatrix(-220, -135));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+8).add(getFrameTransform(drawHandsMove, begin+7));
+
+        // 
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+9).add(makeScaleMatrix(2.5, 2.5));
+        drawHandsMove.get(begin+9).add(makeTranslationMatrix(-210, -135));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+10).add(getFrameTransform(drawHandsMove, begin+9));
+
+        // 
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+11).add(makeScaleMatrix(2.5, 2.5));
+        drawHandsMove.get(begin+11).add(makeTranslationMatrix(-200, -135));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+12).add(getFrameTransform(drawHandsMove, begin+11));
+
+        // 
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+13).add(makeScaleMatrix(2, 2));
+        drawHandsMove.get(begin+13).add(makeTranslationMatrix(-170, -125));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+14).add(getFrameTransform(drawHandsMove, begin+13));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+15).add(getFrameTransform(drawHandsMove, begin+13));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+16).add(getFrameTransform(drawHandsMove, begin+13));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+17).add(getFrameTransform(drawHandsMove, begin+13));
+
+        drawHandsMove.add(new ArrayList<>());
+        drawHandsMove.get(begin+18).add(getFrameTransform(drawHandsMove, begin+13));
+        
+    }
     private double sin(double x) { return Math.sin(x); }
     private double cos(double x) { return Math.cos(x); }
 }
