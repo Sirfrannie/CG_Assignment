@@ -16,6 +16,16 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 
+class ColorSeed {
+    public int x, y;
+    public Color color;
+
+    public ColorSeed(int x, int y, Color color){
+        this.x = x;
+        this.y = y;
+        this.color = color;
+    }
+}
 public class GraphicsSwing 
     extends JPanel implements Runnable
 {
@@ -32,7 +42,7 @@ public class GraphicsSwing
     private double frameDuration = 1000.0 / 12; 
 
     // color 
-    private ArrayList<HashMap<int[], Color>> color;
+    private ArrayList<ArrayList<ColorSeed>> color;
     // list of transformation matrix
     private ArrayList<ArrayList<double[]>> circleMove;
     private ArrayList<ArrayList<double[]>> drawBabyMove;
@@ -60,6 +70,7 @@ public class GraphicsSwing
         createMamaHandMove();
         createHifiveMove();
         createMamaFaceMove();
+        createFrameColor();
     }
 
     @Override
@@ -83,8 +94,7 @@ public class GraphicsSwing
             // debug frame and timer
             debug_frame_timer();
 
-            if ( currentFrame > 32) currentFrame = 0;
-
+            if ( currentFrame > 66) currentFrame = 0;
             repaint();
 
         }
@@ -104,25 +114,39 @@ public class GraphicsSwing
 
         BufferedImage buffer = drawFrame();
 
+        buffer = paintColor(buffer);
+
         g2d.drawImage(buffer, 0, 0, null);
     }
 
     /* public method for testing with other class */
+    public void testColoring(Graphics2D g2d){
+        currentFrame = 1;
+        g2d.setColor(Color.WHITE);
+        plot(g2d, 0, 0, 600);
+        g2d.setColor(Color.BLACK);
+
+        BufferedImage buffer = drawFrame();
+
+        buffer = paintColor(buffer);
+
+        g2d.drawImage(buffer, 0, 0, null);
+    }
     public void testTransformation(Graphics2D g){
         AffineTransform old = g.getTransform();
         Point2D origin = new Point2D.Double(300, 300);
         Point2D screenPos;
         AffineTransform transform;
         /* Change Here */
-        int f = drawBabyFaceMove.size();
+        int f = drawHiFiveMove.size();
         double transmatrix[];
 
         for (int i=0; i<f; ++i){
-            if ( 1 == 1) {
+            if ( i == 4 || i == 4) {
                 /* Change Here */
-                if ( drawBabyFaceMove.get(i) == null ) continue;
+                if ( drawHiFiveMove.get(i) == null ) continue;
                 /* Change Here */
-                transmatrix = getFrameTransform(drawBabyFaceMove, i);
+                transmatrix = getFrameTransform(drawHiFiveMove, i);
                 if (transmatrix == null) continue;
                 transform = new AffineTransform(transmatrix);
                 g.setTransform(transform);
@@ -131,7 +155,26 @@ public class GraphicsSwing
                 System.out.println(Arrays.toString(transmatrix));
                 System.out.println(""+i+" painted at (" + screenPos.getX()+", "+screenPos.getY()+")");
                 /* Change Here */
-                drawBabyFace(g);
+                drawHiFive(g);
+            }
+        }
+        /* Change Here */
+        f = drawMamaFaceMove.size();
+        for (int i=0; i<f; ++i){
+            if ( i == 2 || i==2) {
+                /* Change Here */
+                if ( drawMamaFaceMove.get(i) == null ) continue;
+                /* Change Here */
+                transmatrix = getFrameTransform(drawMamaFaceMove, i);
+                if (transmatrix == null) continue;
+                transform = new AffineTransform(transmatrix);
+                g.setTransform(transform);
+                screenPos = transform.transform(origin, null);
+
+                System.out.println(Arrays.toString(transmatrix));
+                System.out.println(""+i+" painted at (" + screenPos.getX()+", "+screenPos.getY()+")");
+                /* Change Here */
+                drawMamaFace(g, 1);
             }
         }
     }
@@ -170,6 +213,7 @@ public class GraphicsSwing
         AffineTransform old = g.getTransform();
 
         g.setColor(Color.BLACK);
+        /*
         if (currentFrame < circleMove.size()
             && circleMove.get(currentFrame) != null){
             g.setTransform(new AffineTransform(
@@ -178,6 +222,7 @@ public class GraphicsSwing
             drawBall(g);
             g.setTransform(old);
         }
+        */
         if ( currentFrame < drawBabyMove.size() 
             && drawBabyMove.get(currentFrame) != null ){
             g.setTransform(new AffineTransform(
@@ -215,7 +260,7 @@ public class GraphicsSwing
             g.setTransform(new AffineTransform(
                 getFrameTransform(drawMamaFaceMove, currentFrame)
             ));
-            drawMamaFace(g, 1);
+            drawMamaFace(g, (currentFrame > 53)?2:1);
             g.setTransform(old);
         }
 
@@ -819,6 +864,71 @@ public class GraphicsSwing
     }
 
     /* BELOW THIS
+     * Coloring Algorithm
+     */
+    private BufferedImage paintColor(BufferedImage buff){
+        // set of all color at frame
+        if ( currentFrame > color.size() ){
+            return buff;
+        }
+        ArrayList<ColorSeed> cs = color.get(currentFrame);
+        
+        if ( cs == null ){
+            System.out.printf("frame %d cs is null\n", currentFrame);
+            return buff;
+        }
+
+        for (ColorSeed s: cs){
+            buff = floodFill(buff, s.x, s.y, new Color(buff.getRGB(s.x, s.y)), s.color);
+        }
+        return buff;
+        
+    }
+    private BufferedImage floodFill(BufferedImage m, int x, int y,
+        Color targetColor, Color replacement_color){
+
+        Graphics2D g2d = m.createGraphics();
+        Queue<Point> q = new LinkedList<>();
+        
+        if (m.getRGB(x, y) == targetColor.getRGB()){
+            g2d.setColor(replacement_color);
+            plot(g2d, x, y);
+            q.add(new Point(x, y));
+        }
+
+        while (!q.isEmpty()){
+            Point p = q.poll();
+            // s
+            if (p.y < 600 && m.getRGB(p.x, p.y+1) == targetColor.getRGB()){
+                g2d.setColor(replacement_color);
+                plot(g2d, p.x, p.y+1);
+                q.add(new Point(p.x, p.y+1));
+            }
+            // n
+            if (p.y > 0 && m.getRGB(p.x, p.y-1) == targetColor.getRGB()){
+                g2d.setColor(replacement_color);
+                plot(g2d, p.x, p.y-1);
+                q.add(new Point(p.x, p.y-1));
+            }
+            // w
+            if (p.x > 0 && m.getRGB(p.x-1, p.y) == targetColor.getRGB()){
+                g2d.setColor(replacement_color);
+                plot(g2d, p.x-1, p.y);
+                q.add(new Point(p.x-1, p.y));
+            }
+            // e
+            if (p.x < 600 && m.getRGB(p.x+1, p.y) == targetColor.getRGB()){
+                g2d.setColor(replacement_color);
+                plot(g2d, p.x+1, p.y);
+                q.add(new Point(p.x+1, p.y));
+            }
+        }
+        return m;
+
+    }
+
+
+    /* BELOW THIS
      *
      */
     private void createTranformMatrix(){
@@ -867,12 +977,29 @@ public class GraphicsSwing
         //circleMove.get(9).add(makeTranslationMatrix(-300, -300));
 
     }
-    
+
+    /* Color */
+    private void createFrameColor(){
+        color = new ArrayList<>();
+        int frame = 0; 
+        color.add(new ArrayList<>()); // frame 0
+
+        color.add(new ArrayList<>()); // frame 1
+        color.get(frame+1).add(new ColorSeed(2, 2, new Color(150, 179, 242)));
+    }
+
+    /* Animation */
     private void createBabyMove(){
         drawBabyMove = new ArrayList<>();
         int begin = 0; 
 
-        drawBabyMove.add(null);
+        for (int i=0; i<begin; ++i) drawBabyMove.add(null);
+
+        //
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin).add(makeScaleMatrix(4, 4));
+        drawBabyMove.get(begin).add(makeTranslationMatrix(-250, -125));
+
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+1).add(makeScaleMatrix(4, 4));
         drawBabyMove.get(begin+1).add(makeTranslationMatrix(-250, -125));
@@ -880,6 +1007,7 @@ public class GraphicsSwing
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+2).add(getFrameTransform(drawBabyMove, begin+1));
 
+        //
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+3).add(makeScaleMatrix(3.5, 3.5));
         drawBabyMove.get(begin+3).add(makeTranslationMatrix(-237, -120)); 
@@ -887,6 +1015,7 @@ public class GraphicsSwing
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+4).add(getFrameTransform(drawBabyMove, begin+3));
 
+        // 
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+5).add(makeScaleMatrix(3, 3));
         drawBabyMove.get(begin+5).add(makeTranslationMatrix(-220, -115));
@@ -894,6 +1023,7 @@ public class GraphicsSwing
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+6).add(getFrameTransform(drawBabyMove, begin+5));
 
+        //
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+7).add(makeScaleMatrix(2.5, 2.5));
         drawBabyMove.get(begin+7).add(makeTranslationMatrix(-197, -103));
@@ -901,6 +1031,7 @@ public class GraphicsSwing
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+8).add(getFrameTransform(drawBabyMove, begin+7));
 
+        //
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+9).add(makeScaleMatrix(2, 2));
         drawBabyMove.get(begin+9).add(makeTranslationMatrix(-160, -90));
@@ -908,6 +1039,7 @@ public class GraphicsSwing
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+10).add(getFrameTransform(drawBabyMove, begin+9));
 
+        //
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+11).add(makeScaleMatrix(1.5, 1.5));
         drawBabyMove.get(begin+11).add(makeTranslationMatrix(-105, -60));
@@ -915,6 +1047,7 @@ public class GraphicsSwing
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+12).add(getFrameTransform(drawBabyMove, begin+11));
 
+        //
         drawBabyMove.add(new ArrayList<>());
         drawBabyMove.get(begin+13).add(makeDefaultMatrix());
 
@@ -936,27 +1069,314 @@ public class GraphicsSwing
 
     private void createBabyFaceMove(){
         drawBabyFaceMove = new ArrayList<>();
-        int begin = 0;
+        int begin = 19;
+
+        for (int i=0; i<begin; ++i) drawBabyFaceMove.add(null);
+
+        //
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin).add(makeRotationMatrix(-20)); 
+        drawBabyFaceMove.get(begin).add(makeTranslationMatrix(130, -140));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+1).add(getFrameTransform(drawBabyFaceMove, begin));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+2).add(getFrameTransform(drawBabyFaceMove, begin));
         
         drawBabyFaceMove.add(new ArrayList<>());
-        drawBabyFaceMove.get(begin).add(makeTranslationMatrix(50, 0));
+        drawBabyFaceMove.get(begin+3).add(getFrameTransform(drawBabyFaceMove, begin));
 
-        // drawBabyFaceMove.add(new ArrayList<>());
-        // drawBabyFaceMove.get(begin+1).add(makeDefaultMatrix());
+        // 
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+4).add(makeTranslationMatrix(10, 0));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+5).add(getFrameTransform(drawBabyFaceMove, begin+4));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+6).add(getFrameTransform(drawBabyFaceMove, begin+4));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+7).add(getFrameTransform(drawBabyFaceMove, begin+4));
+        
+        // 
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+8).add(makeScaleMatrix(1.2, 1.2));
+        drawBabyFaceMove.get(begin+8).add(makeTranslationMatrix(-90, -25));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+9).add(getFrameTransform(drawBabyFaceMove, begin+8));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+10).add(getFrameTransform(drawBabyFaceMove, begin+8));
+
+        // 
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+11).add(makeScaleMatrix(1.2, 1.2));
+        drawBabyFaceMove.get(begin+11).add(makeTranslationMatrix(-150, 0));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+12).add(getFrameTransform(drawBabyFaceMove, begin+11));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+13).add(getFrameTransform(drawBabyFaceMove, begin+11));
+        
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+14).add(getFrameTransform(drawBabyFaceMove, begin+11));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+15).add(getFrameTransform(drawBabyFaceMove, begin+11));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+16).add(getFrameTransform(drawBabyFaceMove, begin+11));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+17).add(getFrameTransform(drawBabyFaceMove, begin+11));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+18).add(getFrameTransform(drawBabyFaceMove, begin+11));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+19).add(getFrameTransform(drawBabyFaceMove, begin+11));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+20).add(getFrameTransform(drawBabyFaceMove, begin+11));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+21).add(getFrameTransform(drawBabyFaceMove, begin+11));
+
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin+22).add(getFrameTransform(drawBabyFaceMove, begin+11));
     }
 
     private void createMamaHandMove(){
         drawMamaHandMove = new ArrayList<>();
+        int begin = 19;
+
+        for (int i=0; i<begin; ++i) drawMamaHandMove.add(null);
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.add(new ArrayList<>());
+
+        // 
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+4).add(makeTranslationMatrix(20, 3));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+5).add(getFrameTransform(drawMamaHandMove, begin+4));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+6).add(getFrameTransform(drawMamaHandMove, begin+4));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+7).add(getFrameTransform(drawMamaHandMove, begin+4));
+
+        // 
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+8).add(makeTranslationMatrix(30, 6));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+9).add(getFrameTransform(drawMamaHandMove, begin+8));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+10).add(getFrameTransform(drawMamaHandMove, begin+8));
+
+        //
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+11).add(makeTranslationMatrix(90, 10));
+        
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+12).add(getFrameTransform(drawMamaHandMove, begin+11));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+13).add(getFrameTransform(drawMamaHandMove, begin+11));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+14).add(getFrameTransform(drawMamaHandMove, begin+11));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+15).add(getFrameTransform(drawMamaHandMove, begin+11));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+16).add(getFrameTransform(drawMamaHandMove, begin+11));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+17).add(getFrameTransform(drawMamaHandMove, begin+11));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+18).add(getFrameTransform(drawMamaHandMove, begin+11));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+19).add(getFrameTransform(drawMamaHandMove, begin+11));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+20).add(getFrameTransform(drawMamaHandMove, begin+11));
+        
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+21).add(getFrameTransform(drawMamaHandMove, begin+11));
+
+        drawMamaHandMove.add(new ArrayList<>());
+        drawMamaHandMove.get(begin+22).add(getFrameTransform(drawMamaHandMove, begin+11));
     }
 
     private void createHifiveMove(){
         drawHiFiveMove = new ArrayList<>();
+        int begin = 41;
+
+        for (int i=0; i<begin; ++i) drawHiFiveMove.add(null);
+
+        drawHiFiveMove.add(new ArrayList<>());
+
+        //
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+1).add(makeTranslationMatrix(-20, 0));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+2).add(getFrameTransform(drawHiFiveMove, begin+1));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+3).add(getFrameTransform(drawHiFiveMove, begin+1));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+4).add(getFrameTransform(drawHiFiveMove, begin+1));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+5).add(getFrameTransform(drawHiFiveMove, begin+1));
+        //
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+6).add(makeTranslationMatrix(-60, 10));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+7).add(getFrameTransform(drawHiFiveMove, begin+6));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+8).add(getFrameTransform(drawHiFiveMove, begin+6));
+        //
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+9).add(makeTranslationMatrix(-90, 50));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+10).add(getFrameTransform(drawHiFiveMove, begin+9));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+11).add(getFrameTransform(drawHiFiveMove, begin+9));
+
+        //
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+12).add(makeRotationMatrix(20)); 
+        drawHiFiveMove.get(begin+12).add(makeTranslationMatrix(-370, 150));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+13).add(getFrameTransform(drawHiFiveMove, begin+12));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+14).add(getFrameTransform(drawHiFiveMove, begin+12));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+15).add(getFrameTransform(drawHiFiveMove, begin+12));
+        
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+16).add(getFrameTransform(drawHiFiveMove, begin+12));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+17).add(getFrameTransform(drawHiFiveMove, begin+12));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+18).add(getFrameTransform(drawHiFiveMove, begin+12));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+19).add(getFrameTransform(drawHiFiveMove, begin+12));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+20).add(getFrameTransform(drawHiFiveMove, begin+12));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+21).add(getFrameTransform(drawHiFiveMove, begin+12));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+22).add(getFrameTransform(drawHiFiveMove, begin+12));
+
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+23).add(getFrameTransform(drawHiFiveMove, begin+12));
+        
+        drawHiFiveMove.add(new ArrayList<>());
+        drawHiFiveMove.get(begin+24).add(getFrameTransform(drawHiFiveMove, begin+12));
     }
 
     private void createMamaFaceMove(){
         drawMamaFaceMove = new ArrayList<>();
-    }
+        int begin = 41;
 
+        for (int i=0; i<begin; ++i) drawMamaFaceMove.add(null);
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.add(new ArrayList<>());
+
+        //
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+7).add(makeTranslationMatrix(30, 0));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+8).add(getFrameTransform(drawMamaFaceMove, begin+7));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+9).add(getFrameTransform(drawMamaFaceMove, begin+7));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+10).add(getFrameTransform(drawMamaFaceMove, begin+7));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+11).add(getFrameTransform(drawMamaFaceMove, begin+7));
+
+        //
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+12).add(makeRotationMatrix(-8));
+        drawMamaFaceMove.get(begin+12).add(makeTranslationMatrix(130, -40));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+13).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+14).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+15).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+16).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+17).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+18).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+19).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+20).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+21).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+22).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+23).add(getFrameTransform(drawMamaFaceMove, begin+12));
+
+        drawMamaFaceMove.add(new ArrayList<>());
+        drawMamaFaceMove.get(begin+24).add(getFrameTransform(drawMamaFaceMove, begin+12));
+    }
     
     private double sin(double x) { return Math.sin(x); }
     private double cos(double x) { return Math.cos(x); }
