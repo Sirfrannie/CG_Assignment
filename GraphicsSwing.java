@@ -32,9 +32,14 @@ public class GraphicsSwing
     private double frameDuration = 1000.0 / 12; 
 
     // color 
-    private ArrayList<HashMap<Integer, Color>> color;
+    private ArrayList<HashMap<int[], Color>> color;
     // list of transformation matrix
     private ArrayList<ArrayList<double[]>> circleMove;
+    private ArrayList<ArrayList<double[]>> drawBabyMove;
+    private ArrayList<ArrayList<double[]>> drawBabyFaceMove;
+    private ArrayList<ArrayList<double[]>> drawMamaHandMove;
+    private ArrayList<ArrayList<double[]>> drawHiFiveMove;
+    private ArrayList<ArrayList<double[]>> drawMamaFaceMove;
 
     public static void main(String args[]){
         GraphicsSwing m = new GraphicsSwing();
@@ -50,6 +55,11 @@ public class GraphicsSwing
     }
     public GraphicsSwing(){
         createTranformMatrix();
+        createBabyMove();
+        createBabyFaceMove();
+        createMamaHandMove();
+        createHifiveMove();
+        createMamaFaceMove();
     }
 
     @Override
@@ -73,7 +83,7 @@ public class GraphicsSwing
             // debug frame and timer
             debug_frame_timer();
 
-            if ( currentFrame > 8 ) currentFrame = 0;
+            if ( currentFrame > 32) currentFrame = 0;
 
             repaint();
 
@@ -92,30 +102,36 @@ public class GraphicsSwing
         plot(g2d, 0, 0, 600);
         g2d.setColor(Color.BLACK);
 
+        BufferedImage buffer = drawFrame();
 
-        g2d.setTransform(new AffineTransform(
-            getFrameTransform(circleMove, currentFrame)
-        ));
-        drawBall(g2d);
+        g2d.drawImage(buffer, 0, 0, null);
     }
+
     /* public method for testing with other class */
     public void testTransformation(Graphics2D g){
         AffineTransform old = g.getTransform();
         Point2D origin = new Point2D.Double(300, 300);
         Point2D screenPos;
         AffineTransform transform;
-        int f = circleMove.size();
+        /* Change Here */
+        int f = drawBabyFaceMove.size();
         double transmatrix[];
 
         for (int i=0; i<f; ++i){
             if ( 1 == 1) {
-            transmatrix = getFrameTransform(circleMove, i);
-            transform = new AffineTransform(transmatrix);
-            System.out.println(Arrays.toString(transmatrix));
-            g.setTransform(transform);
-            screenPos = transform.transform(origin, null);
-            System.out.println(""+i+" painted at (" + screenPos.getX()+", "+screenPos.getY()+")");
-            drawBall(g);
+                /* Change Here */
+                if ( drawBabyFaceMove.get(i) == null ) continue;
+                /* Change Here */
+                transmatrix = getFrameTransform(drawBabyFaceMove, i);
+                if (transmatrix == null) continue;
+                transform = new AffineTransform(transmatrix);
+                g.setTransform(transform);
+                screenPos = transform.transform(origin, null);
+
+                System.out.println(Arrays.toString(transmatrix));
+                System.out.println(""+i+" painted at (" + screenPos.getX()+", "+screenPos.getY()+")");
+                /* Change Here */
+                drawBabyFace(g);
             }
         }
     }
@@ -129,10 +145,10 @@ public class GraphicsSwing
 
 
         // drawBaby(g_buf);
-        // drawBabyFace(g_buf);
+        drawBabyFace(g_buf);
         // drawMamaHand(g_buf);
         // drawHiFive(g_buf);
-        drawMamaFace(g_buf, 2);
+        // drawMamaFace(g_buf, 2);
 
 
         g.drawImage(test_buffer, 0, 0, null);
@@ -145,14 +161,66 @@ public class GraphicsSwing
     /* BELOW THIS
      * Drawing Stuff
      */
-    private BufferedImage drawFrame(int frame){
+    private BufferedImage drawFrame(){
         BufferedImage buffer = new BufferedImage(SIZE+1, SIZE+1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = buffer.createGraphics();
         g.setColor(Color.WHITE);
         plot(g, 0, 0, 600);
 
+        AffineTransform old = g.getTransform();
+
         g.setColor(Color.BLACK);
-        drawBabyFace(g);
+        if (currentFrame < circleMove.size()
+            && circleMove.get(currentFrame) != null){
+            g.setTransform(new AffineTransform(
+                getFrameTransform(circleMove, currentFrame)
+            ));
+            drawBall(g);
+            g.setTransform(old);
+        }
+        if ( currentFrame < drawBabyMove.size() 
+            && drawBabyMove.get(currentFrame) != null ){
+            g.setTransform(new AffineTransform(
+                getFrameTransform(drawBabyMove, currentFrame)
+            ));
+            drawBaby(g);
+            g.setTransform(old);
+        }
+        if ( currentFrame < drawBabyFaceMove.size()
+            && drawBabyFaceMove.get(currentFrame) != null ){
+            g.setTransform(new AffineTransform(
+                getFrameTransform(drawBabyFaceMove, currentFrame)
+            ));
+            drawBabyFace(g);
+            g.setTransform(old);
+        }
+        if ( currentFrame < drawMamaHandMove.size()
+            && drawMamaHandMove.get(currentFrame) != null ){
+            g.setTransform(new AffineTransform(
+                getFrameTransform(drawMamaHandMove, currentFrame)
+            ));
+            drawMamaHand(g);
+            g.setTransform(old);
+        }
+        if ( currentFrame < drawHiFiveMove.size()
+            && drawHiFiveMove.get(currentFrame) != null ){
+            g.setTransform(new AffineTransform(
+                getFrameTransform(drawHiFiveMove, currentFrame)
+            ));
+            drawHiFive(g);
+            g.setTransform(old);
+        }
+        if ( currentFrame < drawMamaFaceMove.size() 
+            && drawMamaFaceMove.get(currentFrame) != null){
+            g.setTransform(new AffineTransform(
+                getFrameTransform(drawMamaFaceMove, currentFrame)
+            ));
+            drawMamaFace(g, 1);
+            g.setTransform(old);
+        }
+
+
+        // drawBabyFace(g);
 
         return buffer;
     }
@@ -180,7 +248,7 @@ public class GraphicsSwing
             250, 200,
             265, 180,
             264, 230,
-            249, 220
+            245, 220
         );
         // body
         // back spine
@@ -210,7 +278,7 @@ public class GraphicsSwing
         drawLine(g, 211, 272, 205, 310);
         // rigth arm
         drawLine(g, 190, 265, 275, 215);
-        drawLine(g, 196, 283, 275, 227);
+        drawLine(g, 196, 283, 275, 226);
         // hand
         drawCurve(g,
             275, 215,
@@ -225,7 +293,7 @@ public class GraphicsSwing
             305, 211,
             280, 230
         );
-        drawLine(g, 280, 230, 275, 227);
+        drawLine(g, 280, 230, 274, 226);
         // Leg
         drawCurve(g,
             215, 312,
@@ -245,51 +313,91 @@ public class GraphicsSwing
         drawLine(g, 209, 300, 212, 310);  
     }
     private void drawBabyFace(Graphics2D g){
-        AffineTransform ot = g.getTransform();
-        // head shape
-        drawPolygon(g,
-  /* x axis */new int[]{70, 167, 286, 352, 381, 417, 419, 385, 294, 203, 111,  67,  67, 48},
-  /* y axis */new int[]{119, 67,  60, 110, 190, 235, 294, 350, 390, 402, 393, 340, 277, 195} 
-        );
-        g.setTransform(new AffineTransform(
-            multiplyTransform(
-                makeRotationMatrix(20), 
-                makeTranslationMatrix(-70, 100)
-            )
-        ));
-        // dummy
-        drawCircle(g, 210, 280, 65);
-        // left(HS) eye
-        drawEllipse(g, 123, 170, 45, 52);
-        drawEllipse(g, 123, 170, 15, 22);
-        drawCircle(g, 127, 132, 15);
-        // right(HS) eye
-        drawEllipse(g, 296, 170, 45, 52);
-        drawEllipse(g, 296, 170, 15, 22);
-        drawCircle(g, 300, 132, 15);
+        // face shape
+        int x_face[] = {183, 178, 178, 187, 204, 223, 247, 270, 302, 330, 
+                    357, 378, 391, 399, 405, 408, 414, 418, 423, 431, 
+                    436, 438, 434, 428, 426, 434, 439, 440, 438, 434, 
+                    425, 417, 407, 392, 376, 355, 334, 311, 283, 256, 
+                    248, 244, 239, 233, 224, 211, 199, 194, 191, 197, 
+                    206, 205};
+        int y_face[] = {299, 264, 236, 206, 181, 166, 155, 145, 142, 146, 
+                    153, 163, 170, 185, 202, 213, 208, 203, 202, 209, 
+                    220, 237, 251, 256, 259, 271, 282, 292, 316, 336, 
+                    354, 368, 381, 392, 401, 408, 413, 415, 408, 397, 
+                    389, 380, 371, 372, 371, 365, 356, 346, 336, 331, 
+                    331, 325};
+        drawPolygon(g, x_face, y_face);
+        drawLine(g, 205, 325, 219, 342);
+        drawLine(g, 239, 371, 234, 360);
+        drawLine(g, 409, 213, 412, 226);
+        drawLine(g, 419, 244, 426, 259);
 
-        // cheek
-        g.setTransform(ot);
-        drawLine(g, 107, 289, 102, 320);
-        drawLine(g, 133, 283, 128, 319);
-        drawLine(g, 162, 282, 156, 309);
-        drawLine(g, 312, 231, 312, 253);
-        drawLine(g, 334, 216, 330, 262);
-        drawLine(g, 361, 217, 359, 244);
+        // dummy
+        int x_d[] = {343, 335, 319, 317, 323, 335, 353, 369, 389, 391, 
+                    389, 383, 380, 369, 363, 355, 346, 346, 344};
+        int y_d[] = {386, 386, 372, 353, 339, 325, 321, 325, 338, 
+                    348, 360, 368, 360, 352, 350, 347, 350, 358, 
+                    373};
+        drawPolygon(g, x_d, y_d);
+        int x_d2[] = {343, 345, 354, 363, 370, 377, 383, 383, 380, 
+                    369, 363, 355, 346, 346, 344};
+        int y_d2[] = {386, 392, 396, 396, 392, 387, 376, 368, 360, 352,  
+                    350, 347, 350, 358, 373};
+        drawPolygon(g, x_d2, y_d2);
+        drawCircle(g, 362, 372, 10);
+
+        // eyelash
+        int x_el1[] = {292, 274, 260, 250, 247, 251, 259, 247, 242, 243,  
+                    253, 276};
+        int y_el1[] = {286, 296, 310, 325, 334, 339, 343, 340, 334, 319,  
+                    300, 288};
+        drawPolygon(g, x_el1, y_el1);
+        drawLine(g, 276, 345, 299, 332);
+        int x_el2[] = {328, 335, 352, 372, 391, 393, 394, 390, 391, 388,  
+                    363, 345};
+        int y_el2[] = {265, 254, 243, 242, 247, 255, 268, 280,  
+                    264, 252, 249, 254};
+        drawPolygon(g, x_el2, y_el2);
+        drawLine(g, 360, 300, 384, 287);
+         
+        // eye
+        int x_e1[] ={253, 259, 270, 284, 293, 296, 295, 288, 279, 267, 257};
+        int y_e1[] ={320, 333, 340, 340, 330, 319, 306, 298, 293, 302,
+                    311};
+        drawPolygon(g, x_e1, y_e1);
+        drawCircle(g, 273, 317, 9);
+        drawCircle(g, 278, 302, 7);
+        
+        int x_e2[] = {341, 341, 344, 354, 364, 369, 380, 382, 381, 373, 363};
+        int y_e2[] = {257, 270, 281, 291, 294, 295, 284, 273, 262, 249, 249};
+        drawPolygon(g, x_e2, y_e2);
+        drawCircle(g, 362, 270, 9);
+        drawCircle(g, 365, 255, 6);
+
+        // eye brown
+        int x_eb1[] = {263, 240, 248};
+        int y_eb1[] = {269, 300, 279};
+        drawPolygon(g, x_eb1, y_eb1);
+        int x_eb2[] = {324, 336, 359, 339, 331};
+        int y_eb2[] = {235, 228, 234, 232, 234};
+        drawPolygon(g, x_eb2, y_eb2);
+
         // hair
         drawCurve(g,
-            144, 124,
-            144, 136,
-            155, 151,
-            168, 152
+            255, 196,
+            248, 217,
+            264, 233,
+            286, 232
         );
-        drawLine(g, 182, 98, 196, 140);
-        drawCurve(g,
-            229, 98,
-            236, 106,
-            234, 127,
-            226, 139
-        );
+        drawLine(g, 286, 232, 273, 206);
+
+        // cheek
+        drawLine(g, 275, 369, 277, 382);
+        drawLine(g, 286, 354, 293, 389);
+        drawLine(g, 296, 357, 299, 372);
+        drawLine(g, 396, 308, 401, 327);
+        drawLine(g, 408, 296, 414, 330);
+        drawLine(g, 423, 296, 423, 312); 
     }
     
     private void drawMamaHand(Graphics2D g){
@@ -503,6 +611,9 @@ public class GraphicsSwing
     private double[] makeTranslationMatrix(double add_x, double add_y){
         return new double[]{1, 0, 0, 1, add_x, add_y};
     }
+    private double[] makeDefaultMatrix(){
+        return new double[]{1, 0, 0, 1, 0, 0};
+    }
     private double[] getFrameTransform(
         ArrayList<ArrayList<double[]>> alist,
         int frame
@@ -511,24 +622,22 @@ public class GraphicsSwing
         double result[] = {1, 0, 0, 1, 0, 0};
 
         if ( frame > alist.size()-1 ){
-            System.out.println(""
-                +"getFrameTransform(): ArrayList out of bound ("+frame+":"+alist.size()+")");
-            return result;
+            // System.out.println("" +"getFrameTransform(): ArrayList out of bound ("+frame+":"+alist.size()+")");
+            return null;
+        }
+
+        if ( alist.get(frame) == null ){
+            // System.out.println("" +"getFrameTransform(): null transform at frame:"+frame);
+            return null;
         }
 
         // list of all matrix at $frame frame
         ArrayList<double[]> transforms = alist.get(frame);
 
-        if ( transforms == null ){
-            System.out.println(""
-                +"getFrameTransform(): null transform at frame:"+frame);
-            return result;
-        }
-
-
         // multiply all matrix in the list
         for (double m[]: transforms){
             // System.out.println("Multiply with"+ Arrays.toString(m));
+            if ( m == null ) return null;
             result = multiplyTransform(result, m);
         }
         return result; 
@@ -757,6 +866,95 @@ public class GraphicsSwing
         circleMove.get(9).add(makeScaleMatrix(0.25, 0.25));
         //circleMove.get(9).add(makeTranslationMatrix(-300, -300));
 
+    }
+    
+    private void createBabyMove(){
+        drawBabyMove = new ArrayList<>();
+        int begin = 0; 
+
+        drawBabyMove.add(null);
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+1).add(makeScaleMatrix(4, 4));
+        drawBabyMove.get(begin+1).add(makeTranslationMatrix(-250, -125));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+2).add(getFrameTransform(drawBabyMove, begin+1));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+3).add(makeScaleMatrix(3.5, 3.5));
+        drawBabyMove.get(begin+3).add(makeTranslationMatrix(-237, -120)); 
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+4).add(getFrameTransform(drawBabyMove, begin+3));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+5).add(makeScaleMatrix(3, 3));
+        drawBabyMove.get(begin+5).add(makeTranslationMatrix(-220, -115));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+6).add(getFrameTransform(drawBabyMove, begin+5));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+7).add(makeScaleMatrix(2.5, 2.5));
+        drawBabyMove.get(begin+7).add(makeTranslationMatrix(-197, -103));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+8).add(getFrameTransform(drawBabyMove, begin+7));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+9).add(makeScaleMatrix(2, 2));
+        drawBabyMove.get(begin+9).add(makeTranslationMatrix(-160, -90));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+10).add(getFrameTransform(drawBabyMove, begin+9));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+11).add(makeScaleMatrix(1.5, 1.5));
+        drawBabyMove.get(begin+11).add(makeTranslationMatrix(-105, -60));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+12).add(getFrameTransform(drawBabyMove, begin+11));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+13).add(makeDefaultMatrix());
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+14).add(getFrameTransform(drawBabyMove, begin+13));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+15).add(getFrameTransform(drawBabyMove, begin+13));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+16).add(getFrameTransform(drawBabyMove, begin+13));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+17).add(getFrameTransform(drawBabyMove, begin+13));
+
+        drawBabyMove.add(new ArrayList<>());
+        drawBabyMove.get(begin+18).add(getFrameTransform(drawBabyMove, begin+13));
+    }
+
+    private void createBabyFaceMove(){
+        drawBabyFaceMove = new ArrayList<>();
+        int begin = 0;
+        
+        drawBabyFaceMove.add(new ArrayList<>());
+        drawBabyFaceMove.get(begin).add(makeTranslationMatrix(50, 0));
+
+        // drawBabyFaceMove.add(new ArrayList<>());
+        // drawBabyFaceMove.get(begin+1).add(makeDefaultMatrix());
+    }
+
+    private void createMamaHandMove(){
+        drawMamaHandMove = new ArrayList<>();
+    }
+
+    private void createHifiveMove(){
+        drawHiFiveMove = new ArrayList<>();
+    }
+
+    private void createMamaFaceMove(){
+        drawMamaFaceMove = new ArrayList<>();
     }
 
     
