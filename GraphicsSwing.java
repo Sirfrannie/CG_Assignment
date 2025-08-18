@@ -14,10 +14,12 @@ import java.lang.*;
 import java.util.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 
 public class GraphicsSwing 
     extends JPanel implements Runnable
 {
+    private final int SIZE = 600;
     // Frame and Timer
     private int currentFrame = 0; 
     private double lastSecond = 0;
@@ -118,16 +120,39 @@ public class GraphicsSwing
         }
     }
     public void testDraw(Graphics2D g){
-        // drawBaby(g);
-        drawBabyFace(g);
+        BufferedImage test_buffer = new BufferedImage(SIZE+1, SIZE+1, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g_buf = test_buffer.createGraphics();
+        g_buf.setColor(Color.WHITE);
+        plot(g_buf, 0, 0, 600);
+
+        g_buf.setColor(Color.BLACK);
+
+
+        // drawBaby(g_buf);
+        drawBabyFace(g_buf);
+        drawMamaHand(g_buf);
+
+
+        g.drawImage(test_buffer, 0, 0, null);
+    }
+    private void drawBall(Graphics2D g){
+        // drawCircle(g, 300, 300, 30);
+        g.drawOval(300, 300, 30,30);
     }
 
     /* BELOW THIS
      * Drawing Stuff
      */
-    private void drawBall(Graphics2D g){
-        // drawCircle(g, 300, 300, 30);
-        g.drawOval(300, 300, 30,30);
+    private BufferedImage drawFrame(int frame){
+        BufferedImage buffer = new BufferedImage(SIZE+1, SIZE+1, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = buffer.createGraphics();
+        g.setColor(Color.WHITE);
+        plot(g, 0, 0, 600);
+
+        g.setColor(Color.BLACK);
+        drawBabyFace(g);
+
+        return buffer;
     }
 
     private void drawBaby(Graphics2D g){
@@ -225,14 +250,21 @@ public class GraphicsSwing
   /* y axis */new int[]{119, 67,  60, 110, 190, 235, 294, 350, 390, 402, 393, 340, 277, 195} 
         );
         g.setTransform(new AffineTransform(
-            multiplyTransform(makeRotationMatrix(20), makeTranslationMatrix(-45, 160))
+            multiplyTransform(
+                makeRotationMatrix(20), 
+                makeTranslationMatrix(-70, 100)
+            )
         ));
         // dummy
-        drawCircle(g, 210, 320, 70);
+        drawCircle(g, 210, 280, 65);
         // left(HS) eye
-        drawEllipse(g, 123, 170, 55, 62);
+        drawEllipse(g, 123, 170, 45, 52);
+        drawEllipse(g, 123, 170, 15, 22);
+        drawCircle(g, 127, 132, 15);
         // right(HS) eye
-        drawEllipse(g, 296, 170, 55, 62);
+        drawEllipse(g, 296, 170, 45, 52);
+        drawEllipse(g, 296, 170, 15, 22);
+        drawCircle(g, 300, 132, 15);
 
         // cheek
         g.setTransform(ot);
@@ -242,6 +274,43 @@ public class GraphicsSwing
         drawLine(g, 312, 231, 312, 253);
         drawLine(g, 334, 216, 330, 262);
         drawLine(g, 361, 217, 359, 244);
+        // hair
+        drawCurve(g,
+            144, 124,
+            144, 136,
+            155, 151,
+            168, 152
+        );
+        drawLine(g, 182, 98, 196, 140);
+        drawCurve(g,
+            229, 98,
+            236, 106,
+            234, 127,
+            226, 139
+        );
+    }
+    
+    private void drawMamaHand(Graphics2D g){
+        // hand
+        int xVal[] = {235, 227, 236, 314, 305, 295, 250, 217, 193, 173, 181, 212, 
+                    260, 308, 330, 343, 350, 329, 308, 287, 270, 275, 292, 317, 
+                    346, 377, 399, 410, 414, 407, 393, 379, 393, 407, 422, 441, 
+                    460, 470, 484, 499, 513, 536, 547, 556, 545, 532, 522, 539, 
+                    547, 548, 520, 480, 442, 431, 421, 348, 320};
+
+        int yVal[] = {514, 493, 475, 483, 438, 406, 350, 313, 285, 255, 242, 265, 
+                    311, 354, 374, 369, 350, 307, 256, 205, 164, 140, 146, 192, 
+                    239, 295, 332, 332, 320, 260, 179, 120, 108, 119, 173, 252, 
+                    319, 325, 308, 263, 227, 184, 174, 185, 237, 286, 330, 400, 
+                    468, 509, 510, 520, 533, 548, 573, 551, 543};
+        drawPolygon(g, xVal, yVal);
+
+        // wraist
+        int xVal1[] = {433, 421, 431, 442, 480, 520, 548, 558, 560, 591};
+        int yVal1[] = {599, 573, 548, 533, 520, 510, 509, 512, 547, 599};
+        drawPolygon(g, xVal1, yVal1);
+
+
     }
 
     /* BELOW THIS
